@@ -1,0 +1,5 @@
+telegram:
+    enableFilter: false
+    groupsToMonitor:
+        - -4991977984
+        - 122528280

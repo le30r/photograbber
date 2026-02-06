@@ -2,7 +2,7 @@ package io.r03el.photograbber.config
 
 class AppConfig(
     val telegram: TelegramConfig,
-    val minio: MinioConfig
-) {
-
-}
+    val minio: MinioConfig,
+    val queue: QueueConfig = QueueConfig(),
+    val worker: WorkerConfig = WorkerConfig(),
+)

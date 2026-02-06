@@ -1,8 +1,11 @@
 package io.r03el.photograbber.server
 
+import io.r03el.photograbber.model.Type
+import io.r03el.photograbber.service.GalleryItem
 import io.r03el.photograbber.service.GalleryService
 
-private val TEMPLATE: String = """
+private val TEMPLATE: String =
+    """
     <!DOCTYPE html>
     <html lang="ru">
     <head>
@@ -167,42 +170,50 @@ private val TEMPLATE: String = """
 
     </body>
     </html>
-
-""".trimIndent()
+    """.trimIndent()
 
 class GalleryController(
-    val galleryService: GalleryService
+    val galleryService: GalleryService,
 ) {
+    fun loadGallery(): String = TEMPLATE.replace("{{GALLERY}}", formatGallery(galleryService.getItems()))
 
-    fun loadGallery(): String {
-        return TEMPLATE.replace("{{GALLERY}}", formatGallery(galleryService.getImages()))
-    }
-
-    fun formatGallery(medias: List<String>): String {
+    fun formatGallery(items: List<GalleryItem>): String {
         val sb: StringBuilder = StringBuilder()
-        medias.forEach { media ->
-            if (media.endsWith(".jpg")) {
-                sb.append(
-                    """
-                       <div class="gallery-item">
-                           <img src="$media" loading="lazy" onerror="this.style.display='none'">
-                       </div>
-                    """.trimIndent()
-                )
-            }
-            if (media.endsWith(".mp4")) {
-                sb.append(
-                    """
-                    <div class="gallery-item">
-                        <video controls preload="none">
-                            <source src="$media" type="video/mp4">
-                        </video>
-                    </div>
-                    """.trimIndent()
-                )
-            }
+        items.forEach { item ->
+            val type = item.metadata?.type ?: detectTypeFromPath(item.path)
+            val mediaUrl = item.url
 
+            when (type) {
+                Type.IMAGE, Type.DOCUMENT_IMAGE -> {
+                    sb.append(
+                        """
+                        <div class="gallery-item">
+                            <img src="$mediaUrl" loading="lazy" onerror="this.style.display='none'">
+                        </div>
+                        """.trimIndent(),
+                    )
+                }
+
+                Type.VIDEO, Type.VIDEO_NOTE, Type.DOCUMENT_VIDEO -> {
+                    sb.append(
+                        """
+                        <div class="gallery-item">
+                            <video controls preload="metadata"  onerror="this.style.display='none'">
+                                <source src="$mediaUrl" type="video/mp4">
+                            </video>
+                        </div>
+                        """.trimIndent(),
+                    )
+                }
+            }
         }
         return sb.toString()
     }
+
+    private fun detectTypeFromPath(path: String): Type =
+        when {
+            path.endsWith(".jpg", ignoreCase = true) -> Type.IMAGE
+            path.endsWith(".mp4", ignoreCase = true) -> Type.VIDEO
+            else -> Type.IMAGE
+        }
 }

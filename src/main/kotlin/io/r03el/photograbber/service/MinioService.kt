@@ -10,16 +10,18 @@ import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.time.LocalDate
+import java.util.UUID
 
 class MinioService(
     private val config: MinioConfig,
 ) {
     private val logger = LoggerFactory.getLogger(MinioService::class.java)
-    private val minioClient: MinioAsyncClient = MinioAsyncClient
-        .builder()
-        .endpoint(config.endpoint)
-        .credentials(config.accessKey, config.secretKey)
-        .build()
+    private val minioClient: MinioAsyncClient =
+        MinioAsyncClient
+            .builder()
+            .endpoint(config.endpoint)
+            .credentials(config.accessKey, config.secretKey)
+            .build()
 
     init {
         runBlocking {
@@ -72,30 +74,60 @@ class MinioService(
             inputStream.close()
         }
 
+    fun listFiles() =
+        try {
+            val args =
+                ListObjectsArgs
+                    .builder()
+                    .recursive(true)
+                    .bucket(config.bucket)
+                    .build()
 
-    fun listFiles() = try {
-        val args =
-            ListObjectsArgs
-                .builder()
-                .recursive(true)
-                .bucket(config.bucket)
-                .build()
-
-        minioClient.listObjects(args).map { obj -> "${config.bucket}/${obj.get().objectName()}" }
-
-    } catch (e: ErrorResponseException) {
-        logger.error("Error listing files in ${config.bucket} ${e.message}", e)
-        throw e
-    } catch (e: Exception) {
-        logger.error("Unexpected error listing files in ${config.bucket}: ${e.message}", e)
-        throw e
-    }
+            minioClient.listObjects(args).map { obj -> "${config.bucket}/${obj.get().objectName()}" }
+        } catch (e: ErrorResponseException) {
+            logger.error("Error listing files in ${config.bucket} ${e.message}", e)
+            throw e
+        } catch (e: Exception) {
+            logger.error("Unexpected error listing files in ${config.bucket}: ${e.message}", e)
+            throw e
+        }
 
     fun generateFileName(
         groupId: Long,
         date: LocalDate,
         timestamp: Long,
-        fileId: String,
         type: Type,
-    ): String = "$groupId/$date/${timestamp}_$fileId.${type.extension}"
+        originalFileName: String? = null,
+    ): String {
+        val baseName =
+            if (!originalFileName.isNullOrBlank()) {
+                sanitizeFileName(originalFileName.substringBeforeLast('.'))
+            } else {
+                generateShortUuid()
+            }
+        return "$groupId/$date/${timestamp}_$baseName.${type.extension}"
+    }
+
+    private fun sanitizeFileName(fileName: String): String =
+        fileName
+            .replace(Regex("[^a-zA-Z0-9\\-_\\.]"), "_")
+            .take(50)
+
+    private fun generateShortUuid(): String = UUID.randomUUID().toString().substring(0, 8)
+
+    fun getObjectMetadata(objectName: String): Map<String, String>? =
+        try {
+            val args =
+                StatObjectArgs
+                    .builder()
+                    .bucket(config.bucket)
+                    .`object`(objectName)
+                    .build()
+
+            val response = minioClient.statObject(args).get()
+            response.userMetadata()
+        } catch (e: Exception) {
+            logger.warn("Failed to get metadata for object $objectName: ${e.message}")
+            null
+        }
 }

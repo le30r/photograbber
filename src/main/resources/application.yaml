@@ -3,3 +3,14 @@ telegram:
     groupsToMonitor:
         - -4991977984
         - 122528280
+
+queue:
+    sqlite:
+        path: "./data/queue.db"
+
+worker:
+    enabled: true
+    concurrency: 3
+    pollIntervalMs: 1000
+    maxRetries: 3
+    retryBaseDelayMs: 5000

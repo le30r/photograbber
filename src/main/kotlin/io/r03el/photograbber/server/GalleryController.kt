@@ -1,6 +1,5 @@
 package io.r03el.photograbber.server
 
-import io.r03el.photograbber.model.Type
 import io.r03el.photograbber.service.GalleryService
 
 private val TEMPLATE: String = """
@@ -66,14 +65,7 @@ private val TEMPLATE: String = """
           cursor: zoom-in;
         }
 
-        .gallery-item img {
-          width: 100%;
-          display: block;
-          border-radius: var(--radius);
-          background: #eaeaea;
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        
+        .gallery-item img,
         .gallery-item video {
           width: 100%;
           display: block;
@@ -81,6 +73,13 @@ private val TEMPLATE: String = """
           background: #eaeaea;
           transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+        
+        .gallery-item:hover img,
+        .gallery-item:hover video {
+          transform: scale(1.015);
+          box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+        }
+
 
         .gallery-item img:hover {
           transform: scale(1.015);
@@ -194,12 +193,15 @@ class GalleryController(
             if (media.endsWith(".mp4")) {
                 sb.append(
                     """
-                        <video class="gallery-item" controls preload="metadata">
+                    <div class="gallery-item">
+                        <video controls preload="none">
                             <source src="$media" type="video/mp4">
                         </video>
+                    </div>
                     """.trimIndent()
                 )
             }
+
         }
         return sb.toString()
     }

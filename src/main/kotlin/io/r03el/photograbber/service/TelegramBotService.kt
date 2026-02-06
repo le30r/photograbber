@@ -33,6 +33,8 @@ class TelegramBotService(
                         logger.info("DEBUG: Message text: ${message.text}")
                         logger.info("DEBUG: Message has photo: ${message.photo != null}")
                         logger.info("DEBUG: Message has videoNote: ${message.videoNote != null}")
+                        logger.info("DEBUG: Message has video: ${message.video   != null}")
+
 
                         val text = message.text
                         if (text != null) {
@@ -68,7 +70,7 @@ class TelegramBotService(
                         val video = message.video
 
                         if (video != null) {
-                            logger.info("DEBUG: Processing video note in chat $chatId")
+                            logger.info("DEBUG: Processing video in chat $chatId")
                             handleVideo(video, metadata)
                         }
                     }

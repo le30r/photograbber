@@ -25,6 +25,7 @@ dependencies {
         exclude(group = "io.ktor")
     }
     implementation("org.slf4j:slf4j-simple:1.7.36")
+    implementation("org.xerial:sqlite-jdbc:3.51.1.0")
 
     implementation("io.minio:minio:8.5.12")
     implementation("org.yaml:snakeyaml:2.2")

@@ -6,7 +6,7 @@ A Kotlin/JVM application that grabs photos and videos from Telegram groups and u
 
 ## Important note!
 
-Учитывай что у меня по умолчанию 25 джава, которая не совместима с текущим проектом. Для запуска компиляции и проверок используй 21
+Учитывай что у меня по умолчанию 25 джава, которая не совместима с текущим проектом. Для запуска компиляции и проверок используй 21, например, `/Users/le30r/Library/Java/JavaVirtualMachines/axiomjdk-21.0.8`
 
 ## Build Commands
 

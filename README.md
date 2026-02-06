@@ -1,40 +1,100 @@
-# photograbber
+# PhotoGrabber
 
-This project was created using the [Ktor Project Generator](https://start.ktor.io).
+Приложение для автоматического сбора фото и видео из Telegram-групп с загрузкой в MinIO хранилище и веб-галереей.
 
-Here are some useful links to get you started:
+## Возможности
 
-- [Ktor Documentation](https://ktor.io/docs/home.html)
-- [Ktor GitHub page](https://github.com/ktorio/ktor)
-- The [Ktor Slack chat](https://app.slack.com/client/T09229ZC6/C0A974TJ9). You'll need to [request an invite](https://surveys.jetbrains.com/s3/kotlin-slack-sign-up) to join.
+- **Telegram бот** — мониторинг групп и автоматическая загрузка медиафайлов
+- **MinIO интеграция** — хранение файлов в S3-совместимом хранилище
+- **SQLite очередь** — надежная обработка файлов с повторными попытками
+- **Веб-галерея** — просмотр загруженных файлов через HTTP
+- **Гибкая конфигурация** — через YAML и переменные окружения
 
-## Features
+## Требования
 
-Here's a list of features included in this project:
+- Java 21
+- Gradle 8.5+
 
-| Name                                               | Description                                                 |
-| ----------------------------------------------------|------------------------------------------------------------- |
-| [Koin](https://start.ktor.io/p/koin)               | Provides dependency injection                               |
-| [Routing](https://start.ktor.io/p/routing-default) | Allows to define structured routes and associated handlers. |
+## Быстрый старт
 
-## Building & Running
+### 1. Настройка окружения
 
-To build or run the project, use one of the following tasks:
-
-| Task                                    | Description                                                          |
-| -----------------------------------------|---------------------------------------------------------------------- |
-| `./gradlew test`                        | Run the tests                                                        |
-| `./gradlew build`                       | Build everything                                                     |
-| `./gradlew buildFatJar`                 | Build an executable JAR of the server with all dependencies included |
-| `./gradlew buildImage`                  | Build the docker image to use with the fat JAR                       |
-| `./gradlew publishImageToLocalRegistry` | Publish the docker image locally                                     |
-| `./gradlew run`                         | Run the server                                                       |
-| `./gradlew runDocker`                   | Run using the local docker image                                     |
-
-If the server starts successfully, you'll see the following output:
-
-```
-2024-12-04 14:32:45.584 [main] INFO  Application - Application started in 0.303 seconds.
-2024-12-04 14:32:45.682 [main] INFO  Application - Responding at http://0.0.0.0:8080
+```bash
+export BOT_TOKEN="your_telegram_bot_token"
+export MINIO_ENDPOINT="http://localhost:9000"
+export MINIO_ACCESS_KEY="minioadmin"
+export MINIO_SECRET_KEY="minioadmin"
+export MINIO_BUCKET="photos"
 ```
 
+### 2. Настройка через YAML
+
+Отредактируйте `src/main/resources/application.yaml`:
+
+```yaml
+telegram:
+    enableFilter: false
+    groupsToMonitor:
+        - -4991977984  # ID групп для мониторинга
+
+queue:
+    sqlite:
+        path: "./data/queue.db"
+
+worker:
+    enabled: true
+    concurrency: 3
+    pollIntervalMs: 1000
+    maxRetries: 3
+```
+
+### 3. Сборка и запуск
+
+```bash
+# Сборка
+./gradlew build
+
+# Запуск
+./gradlew run
+
+# Или fat JAR
+./gradlew buildFatJar
+java -jar build/libs/photograbber-0.0.1-all.jar
+```
+
+## Команды Gradle
+
+| Команда | Описание |
+|---------|----------|
+| `./gradlew build` | Сборка проекта |
+| `./gradlew run` | Запуск приложения |
+| `./gradlew test` | Запуск тестов |
+| `./gradlew buildFatJar` | Сборка исполняемого JAR |
+| `./gradlew clean` | Очистка сборки |
+
+## Архитектура
+
+```
+src/main/kotlin/io/r03el/photograbber/
+├── Application.kt          # Точка входа
+├── AppModule.kt            # DI конфигурация (Koin)
+├── config/                 # Конфигурация
+├── db/                     # База данных и миграции
+│   └── repository/         # Репозитории
+├── model/                  # Модели данных
+├── server/                 # HTTP сервер и контроллеры
+└── service/                # Бизнес-логика
+```
+
+## Технологии
+
+- **Kotlin** 1.9.20
+- **Koin** 3.5.6 — Dependency Injection
+- **SQLite** — локальная база данных
+- **MinIO** — S3-совместимое хранилище
+- **kotlin-telegram-bot** 6.3.0 — работа с Telegram API
+- **kotlinx.serialization** — сериализация
+
+## Лицензия
+
+MIT

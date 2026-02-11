@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
     kotlin("plugin.serialization") version libs.versions.kotlin.get()
     application
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "io.r03el"
@@ -40,4 +41,10 @@ java {
 
 kotlin {
     jvmToolchain(21)
+}
+
+tasks {
+    shadowJar {
+        archiveClassifier.set("")
+    }
 }

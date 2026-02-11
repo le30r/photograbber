@@ -70,12 +70,14 @@ class TelegramBotService(
                         if (photos != null) {
                             logger.info("DEBUG: Processing photo in chat $chatId")
                             handlePhoto(photos, baseMetadata)
+                            bot.sendMessage(ChatId.fromId(chatId), "Спасибо! Ваше фото добавлено в очередь ✅")
                         }
 
                         val videoNote: VideoNote? = message.videoNote
                         if (videoNote != null) {
                             logger.info("DEBUG: Processing video note in chat $chatId")
                             handleVideo(videoNote, baseMetadata)
+                            bot.sendMessage(ChatId.fromId(chatId), "Спасибо! Ваш кружок добавлен в очередь ✅")
                         }
 
                         val video = message.video
@@ -83,12 +85,14 @@ class TelegramBotService(
                         if (video != null) {
                             logger.info("DEBUG: Processing video in chat $chatId")
                             handleVideo(video, baseMetadata)
+                            bot.sendMessage(ChatId.fromId(chatId), "Спасибо! Ваше видео добавлен в очередь ✅")
                         }
 
                         val document = message.document
                         if (document != null) {
                             logger.info("DEBUG: Processing document in chat $chatId")
                             handleDocument(document, baseMetadata)
+                            bot.sendMessage(ChatId.fromId(chatId), "Спасибо! Ваше вложение добавлен в очередь ✅")
                         }
                     }
                 }
@@ -98,7 +102,7 @@ class TelegramBotService(
         bot.startPolling()
     }
 
-    private suspend fun handleVideo(
+    private fun handleVideo(
         video: Video,
         baseMetadata: MediaFileMetadata,
     ) {
@@ -107,7 +111,7 @@ class TelegramBotService(
         saveMediaCatching(fileId, metadata)
     }
 
-    private suspend fun handleVideo(
+    private fun handleVideo(
         note: VideoNote,
         baseMetadata: MediaFileMetadata,
     ) {
@@ -121,7 +125,7 @@ class TelegramBotService(
         saveMediaCatching(fileId, metadata)
     }
 
-    private suspend fun handleDocument(
+    private fun handleDocument(
         document: Document,
         baseMetadata: MediaFileMetadata,
     ) {

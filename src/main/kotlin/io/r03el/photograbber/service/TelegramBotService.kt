@@ -5,11 +5,13 @@ import com.github.kotlintelegrambot.dispatch
 import com.github.kotlintelegrambot.dispatcher.command
 import com.github.kotlintelegrambot.dispatcher.message
 import com.github.kotlintelegrambot.entities.ChatId
+import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
 import com.github.kotlintelegrambot.entities.ParseMode
 import com.github.kotlintelegrambot.entities.files.Document
 import com.github.kotlintelegrambot.entities.files.PhotoSize
 import com.github.kotlintelegrambot.entities.files.Video
 import com.github.kotlintelegrambot.entities.files.VideoNote
+import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
 import io.r03el.photograbber.config.TelegramConfig
 import io.r03el.photograbber.model.MediaFileMetadata
 import io.r03el.photograbber.model.QueueItem
@@ -23,6 +25,10 @@ class TelegramBotService(
     private val logger = LoggerFactory.getLogger(TelegramBotService::class.java)
     private lateinit var bot: com.github.kotlintelegrambot.Bot
 
+    private val inlineKeyboardMarkup = InlineKeyboardMarkup.create(
+        listOf(InlineKeyboardButton.Url(text = "\uD83D\uDDBC Галерея", url = config.gallery)),
+    )
+
     fun start() {
         logger.info("Starting Telegram bot with config: groupsToMonitor=${config.groupsToMonitor}")
 
@@ -35,6 +41,28 @@ class TelegramBotService(
                         val chatId = message.chat.id
                         logger.info("DEBUG: Received status command from $chatId")
                         sendStatusMessage(chatId)
+                    }
+
+                    command("gallery") {
+                        val chatId = message.chat.id
+                        sendGallery(chatId)
+                    }
+
+                    command("start") {
+                        val chatId = message.chat.id
+
+                        bot.sendMessage(
+                            chatId = ChatId.fromId(chatId),
+                            text = """
+                                Добро пожаловать!
+
+                                Этот бот создан для сбора фотографий со свадьбы.
+                                Пожалуйста, отправьте сюда снимки с мероприятия — они будут добавлены в общую галерею.
+
+                                Спасибо, что помогаете сохранить важные моменты этого дня 🤍
+                            """.trimIndent(),
+                            replyMarkup = inlineKeyboardMarkup
+                        )
                     }
 
                     message {
@@ -53,7 +81,7 @@ class TelegramBotService(
                             handleText(text, chatId)
                         }
 
-                        if (!config.enableFilter && chatId !in config.groupsToMonitor) {
+                        if (config.enableFilter && chatId !in config.groupsToMonitor) {
                             logger.info("DEBUG: Chat $chatId not in monitored groups, skipping")
                             return@message
                         }
@@ -70,14 +98,22 @@ class TelegramBotService(
                         if (photos != null) {
                             logger.info("DEBUG: Processing photo in chat $chatId")
                             handlePhoto(photos, baseMetadata)
-                            bot.sendMessage(ChatId.fromId(chatId), "Спасибо! Ваше фото добавлено в очередь ✅")
+                            bot.sendMessage(
+                                ChatId.fromId(chatId),
+                                "Спасибо! Ваше фото добавлено в очередь ✅",
+                                replyMarkup = inlineKeyboardMarkup
+                            )
                         }
 
                         val videoNote: VideoNote? = message.videoNote
                         if (videoNote != null) {
                             logger.info("DEBUG: Processing video note in chat $chatId")
                             handleVideo(videoNote, baseMetadata)
-                            bot.sendMessage(ChatId.fromId(chatId), "Спасибо! Ваш кружок добавлен в очередь ✅")
+                            bot.sendMessage(
+                                ChatId.fromId(chatId),
+                                "Спасибо! Ваш кружок добавлен в очередь ✅",
+                                replyMarkup = inlineKeyboardMarkup
+                            )
                         }
 
                         val video = message.video
@@ -85,15 +121,24 @@ class TelegramBotService(
                         if (video != null) {
                             logger.info("DEBUG: Processing video in chat $chatId")
                             handleVideo(video, baseMetadata)
-                            bot.sendMessage(ChatId.fromId(chatId), "Спасибо! Ваше видео добавлен в очередь ✅")
+                            bot.sendMessage(
+                                ChatId.fromId(chatId),
+                                "Спасибо! Ваше видео добавлен в очередь ✅",
+                                replyMarkup = inlineKeyboardMarkup
+                            )
                         }
 
                         val document = message.document
                         if (document != null) {
                             logger.info("DEBUG: Processing document in chat $chatId")
                             handleDocument(document, baseMetadata)
-                            bot.sendMessage(ChatId.fromId(chatId), "Спасибо! Ваше вложение добавлен в очередь ✅")
+                            bot.sendMessage(
+                                ChatId.fromId(chatId),
+                                "Спасибо! Ваше вложение добавлен в очередь ✅",
+                                replyMarkup = inlineKeyboardMarkup
+                            )
                         }
+
                     }
                 }
             }
@@ -140,7 +185,7 @@ class TelegramBotService(
         if (documentType == null) {
             logger.info(
                 "Skipping document from group ${baseMetadata.chatId}: " +
-                    "mimeType=$mimeType, fileName=$fileName - not a photo or video",
+                        "mimeType=$mimeType, fileName=$fileName - not a photo or video",
             )
             return
         }
@@ -153,7 +198,7 @@ class TelegramBotService(
 
         logger.info(
             "Received document from group ${metadata.chatId}, user ${metadata.userId}, " +
-                "file_id: $fileId, type: $documentType, mimeType: $mimeType, fileName: $fileName, size: $fileSize",
+                    "file_id: $fileId, type: $documentType, mimeType: $mimeType, fileName: $fileName, size: $fileSize",
         )
 
         saveMediaCatching(fileId, metadata)
@@ -319,4 +364,13 @@ class TelegramBotService(
             logger.error("Error enqueueing media", e)
         }
     }
+
+
+    private fun sendGallery(
+        chatId: Long
+    ) {
+        bot.sendMessage(ChatId.fromId(chatId), "Галерея доступна по ссылке: ${config.gallery}")
+    }
 }
+
+

@@ -29,7 +29,10 @@ class HttpServer(private val galleryController: GalleryController) : Runnable {
 
         while (isRunning) {
             val clientSocket: Socket = serverSocket.accept()
-            handle(clientSocket)
+            threadPoolExecutor.execute {
+                handle(clientSocket)
+            }
+
         }
     }
 

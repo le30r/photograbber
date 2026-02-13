@@ -18,6 +18,10 @@ object ConfigLoader {
             System.getenv("BOT_TOKEN")
                 ?: error("BOT_TOKEN is required")
 
+        val galleryUrl =
+            System.getenv("GALLERY_URL")
+                ?: error("GALLERY_URL is required")
+
         val telegramConfig =
             TelegramConfig(
                 botToken = botToken,
@@ -25,6 +29,7 @@ object ConfigLoader {
                 groupsToMonitor =
                     (telegramMap["groupsToMonitor"] as List<*>)
                         .map { it.toString().toLong() },
+                gallery = galleryUrl
             )
 
         val minioConfig =
